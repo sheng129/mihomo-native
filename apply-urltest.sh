@@ -37,7 +37,7 @@ if grep -qE '^\s*-\s*GEOIP,' "$CFG" 2>/dev/null; then
 elif [[ ! -s geosite.dat ]] && [[ ! -s GeoSite.dat ]]; then
   echo ""
   echo "ERROR: 配置使用 GEOSITE 规则但缺少 geosite.dat / GeoSite.dat"
-  echo "请在你电脑上执行: N1_IP=192.168.5.7 bash ~/n1-mihomo-native/fix-n1-now.sh"
+  echo "请在你电脑上执行: N1_IP=192.168.5.7 bash ~/n1-mihomo-native/download-geodata.sh"
   exit 1
 fi
 

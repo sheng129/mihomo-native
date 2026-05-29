@@ -6,6 +6,9 @@ providers/
 # 本地说明（含邮箱、SSH、个人仓库地址等，勿上传）
 docs/GITHUB.md
 
+# 本机一键修复（会上传 config.yaml，仅本地使用）
+fix-n1-now.sh
+
 # 大体积 geodata（可用 download-geodata.sh 下载）
 geoip.metadb
 geosite.dat
