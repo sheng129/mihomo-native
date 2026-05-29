@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - N1 Mihomo</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script>
+    (function () {
+      function resolveTheme(t) {
+        if (t === "system") {
+          return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        return t === "light" ? "light" : "dark";
+      }
+      function applyTheme() {
+        var t = localStorage.getItem("n1-theme") || "dark";
+        document.documentElement.setAttribute("data-theme", resolveTheme(t));
+      }
+      applyTheme();
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () {
+        if (localStorage.getItem("n1-theme") === "system") applyTheme();
+      });
+    })();
+  </script>
+</head>
+<body class="login-page">
+  <form class="login-box" method="post">
+    <h1>N1 Mihomo 面板</h1>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <label class="login-field">
+      <span class="login-label">密码</span>
+      <input class="login-input" type="password" name="password" autocomplete="current-password" autofocus required placeholder="请输入面板密码">
+    </label>
+    <button type="submit" class="btn primary block">登录</button>
+  </form>
+</body>
+</html>

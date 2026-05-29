@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N1 Mihomo 面板</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script>
+    (function () {
+      var t = localStorage.getItem("n1-theme") || "dark";
+      var d = t === "system" && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : (t === "system" ? "dark" : t);
+      document.documentElement.setAttribute("data-theme", d);
+    })();
+  </script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <div class="brand" title="N1 Mihomo">
+          <span class="brand-full">N1 Mihomo</span>
+          <span class="brand-short">N1</span>
+        </div>
+        <button type="button" class="sidebar-toggle" id="btn-sidebar-toggle" aria-expanded="true" aria-controls="sidebar" title="折叠侧栏">‹</button>
+      </div>
+      <nav>
+        <button class="nav active" data-tab="dashboard" title="概览"><span class="nav-short">览</span><span class="nav-label">概览</span></button>
+        <button class="nav" data-tab="devices" title="设备管理"><span class="nav-short">管</span><span class="nav-label">管理</span></button>
+        <button class="nav" data-tab="proxies" title="节点"><span class="nav-short">节</span><span class="nav-label">节点</span></button>
+        <button class="nav" data-tab="providers" title="机场订阅"><span class="nav-short">场</span><span class="nav-label">机场</span></button>
+        <button class="nav" data-tab="rules" title="分流规则"><span class="nav-short">规</span><span class="nav-label">规则</span></button>
+        <button class="nav" data-tab="service" title="服务状态"><span class="nav-short">服</span><span class="nav-label">服务</span></button>
+        <button class="nav" data-tab="settings" title="面板设置"><span class="nav-short">设</span><span class="nav-label">设置</span></button>
+      </nav>
+      <a class="logout" href="/logout" title="退出登录"><span class="nav-short">退</span><span class="nav-label">退出</span></a>
+    </aside>
+
+    <main class="content">
+      <section id="tab-dashboard" class="tab active">
+        <header class="page-header">
+          <h1>概览</h1>
+          <div class="actions">
+            <button class="btn" id="btn-nodes-delay" title="测速 AUTO 组前4节点">节点测速</button>
+            <button class="btn" id="btn-refresh-dashboard">刷新</button>
+          </div>
+        </header>
+
+        <div class="panel overview-fusion">
+          <div class="overview-top">
+            <h2 class="overview-top-title">翻墙模式</h2>
+            <div class="overview-controls">
+              <div class="mode-switch" id="mode-switch">
+                <button class="mode-btn" data-mode="rule">规则分流</button>
+                <button class="mode-btn" data-mode="global">全局代理</button>
+                <button class="mode-btn" data-mode="direct">全局直连</button>
+              </div>
+              <div id="traffic-rings" class="traffic-rings traffic-rings-inline overview-traffic">
+                <div class="ring-card ring-card-placeholder ring-skeleton">
+                  <div class="ring-label">流量</div>
+                  <div class="ring-placeholder-core" aria-hidden="true"></div>
+                  <div class="ring-meta">加载中…</div>
+                </div>
+              </div>
+            </div>
+            <div class="overview-nodes-panel">
+              <div class="overview-nodes-label">节点延迟</div>
+              <div class="overview-nodes node-cards" id="dashboard-nodes">
+                <div class="dash-card node-chip node-skeleton" aria-hidden="true"><div class="label">—</div><div class="value">…</div></div>
+                <div class="dash-card node-chip node-skeleton" aria-hidden="true"><div class="label">—</div><div class="value">…</div></div>
+                <div class="dash-card node-chip node-skeleton" aria-hidden="true"><div class="label">—</div><div class="value">…</div></div>
+                <div class="dash-card node-chip node-skeleton" aria-hidden="true"><div class="label">—</div><div class="value">…</div></div>
+              </div>
+            </div>
+            <p class="hint overview-mode-hint" id="mode-hint">规则：国内直连，其余走 AUTO</p>
+          </div>
+          <div class="stat-cards" id="dashboard-cards">
+            <div class="card dash-card stat-skeleton" aria-hidden="true"><div class="label">—</div><div class="value">…</div></div>
+            <div class="card dash-card stat-skeleton" aria-hidden="true"><div class="label">—</div><div class="value">…</div></div>
+            <div class="card dash-card stat-skeleton" aria-hidden="true"><div class="label">—</div><div class="value">…</div></div>
+            <div class="card dash-card stat-skeleton" aria-hidden="true"><div class="label">—</div><div class="value">…</div></div>
+            <div class="card dash-card stat-skeleton" aria-hidden="true"><div class="label">—</div><div class="value">…</div></div>
+            <div class="card dash-card stat-skeleton" aria-hidden="true"><div class="label">—</div><div class="value">…</div></div>
+          </div>
+        </div>
+
+        <div class="panel panel-connections">
+          <div class="panel-head">
+            <h2>活跃连接</h2>
+            <button class="btn sm" id="btn-refresh-connections" type="button">刷新</button>
+          </div>
+          <div id="connections-preview" class="log-viewer conn-viewer"><div class="log-empty">加载中…</div></div>
+        </div>
+      </section>
+
+      <section id="tab-proxies" class="tab">
+        <header class="page-header">
+          <h1>节点</h1>
+          <button class="btn primary" id="btn-delay-test">测速 AUTO 组</button>
+        </header>
+        <div class="panel">
+          <div id="auto-info"></div>
+          <div class="table-wrap devices-table-wrap">
+            <table>
+              <thead><tr><th>节点</th><th>类型</th><th>状态</th><th>延迟</th></tr></thead>
+              <tbody id="nodes-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-providers" class="tab">
+        <header class="page-header">
+          <h1>机场订阅</h1>
+          <button class="btn primary" id="btn-show-add-provider">添加机场</button>
+        </header>
+        <div id="providers-list" class="cards"></div>
+        <dialog id="provider-qr-dialog" class="provider-qr-dialog">
+          <div class="provider-qr-box">
+            <h3 id="provider-qr-title">订阅二维码</h3>
+            <img id="provider-qr-img" alt="订阅二维码" width="220" height="220">
+            <p class="hint">使用机场客户端扫码导入（链接不在页面展示）</p>
+            <button type="button" class="btn sm" id="btn-provider-qr-close">关闭</button>
+          </div>
+        </dialog>
+        <div class="panel hidden" id="add-provider-form">
+          <h2>添加机场</h2>
+          <p class="hint" id="provider-form-hint">支持 Clash/Meta 远程订阅、本地 YAML、内联节点与 Token 请求头。</p>
+          <div class="provider-presets" id="provider-presets"></div>
+          <form id="form-add-provider" class="provider-form">
+            <label>名称 <input name="name" required placeholder="例如 myairport"></label>
+            <label>订阅方式
+              <select name="provider_type" id="provider-type-select">
+                <option value="http">远程订阅 (HTTP)</option>
+                <option value="file">本地文件</option>
+                <option value="inline">内联节点</option>
+              </select>
+            </label>
+            <label class="provider-field provider-field-url">订阅 URL
+              <input name="url" type="url" placeholder="https://example.com/sub?token=...">
+            </label>
+            <label class="provider-field provider-field-path hidden">本地路径
+              <input name="path" placeholder="./providers/myairport.yaml">
+            </label>
+            <label class="provider-field provider-field-payload hidden">节点内容 (YAML)
+              <textarea name="payload" rows="6" placeholder="- name: node1&#10;  type: ss&#10;  server: ..."></textarea>
+            </label>
+            <label class="provider-field provider-field-interval">更新间隔(秒)
+              <input name="interval" type="number" value="3600" min="300">
+            </label>
+            <label class="provider-field provider-field-ua">User-Agent（可选）
+              <input name="user_agent" placeholder="部分机场要求自定义 UA">
+            </label>
+            <label class="provider-field provider-field-headers">请求头（可选，每行 Key: Value）
+              <textarea name="headers" rows="2" placeholder="Authorization: Bearer xxx"></textarea>
+            </label>
+            <label>流量限额(GB，可选) <input name="limit_gb" type="number" step="0.1" placeholder="例如 100"></label>
+            <label>节点过滤(正则，可选) <input name="filter" placeholder="(新加坡|香港|日本)"></label>
+            <label>排除过滤(正则，可选) <input name="exclude_filter" placeholder="过期|倍率"></label>
+            <label class="checkbox"><input name="add_to_auto" type="checkbox" checked> 加入 AUTO 策略组</label>
+            <div class="actions">
+              <button type="submit" class="btn primary">保存并应用</button>
+              <button type="button" class="btn" id="btn-cancel-add">取消</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="tab-rules" class="tab">
+        <header class="page-header">
+          <h1>分流规则</h1>
+          <button class="btn primary" id="btn-save-rules">保存并应用</button>
+        </header>
+        <div class="panel mode-panel">
+          <h2>快捷模式（立即生效）</h2>
+          <div class="mode-switch" id="mode-switch-rules">
+            <button class="mode-btn" data-mode="rule">规则分流</button>
+            <button class="mode-btn" data-mode="global">全局代理</button>
+            <button class="mode-btn" data-mode="direct">全局直连</button>
+          </div>
+        </div>
+        <div class="panel">
+          <p class="hint">每行一条规则，例如 <code>GEOSITE,cn,DIRECT</code>、<code>MATCH,AUTO</code></p>
+          <textarea id="rules-editor" rows="14" spellcheck="false"></textarea>
+          <div class="rule-presets">
+            <span>快速插入：</span>
+            <button class="btn sm" data-rule="GEOSITE,cn,DIRECT">国内直连</button>
+            <button class="btn sm" data-rule="GEOSITE,google,AUTO">Google 走代理</button>
+            <button class="btn sm" data-rule="GEOSITE,youtube,AUTO">YouTube 走代理</button>
+            <button class="btn sm" data-rule="MATCH,AUTO">其余走 AUTO</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-devices" class="tab">
+        <header class="page-header devices-page-header">
+          <h1>已连接设备</h1>
+          <div class="devices-toolbar panel compact">
+            <div class="devices-toolbar-row">
+              <div class="devices-toolbar-group">
+                <span class="toolbar-label">新设备默认</span>
+                <div class="seg-control device-default-seg" role="group" aria-label="新设备默认策略">
+                  <button type="button" class="seg-btn device-default-btn" id="btn-default-device-direct" data-policy="direct">直连</button>
+                  <button type="button" class="seg-btn device-default-btn" id="btn-default-device-proxy" data-policy="proxy">允许</button>
+                </div>
+              </div>
+              <div class="devices-toolbar-group devices-toolbar-actions">
+                <label class="checkbox compact"><input type="checkbox" id="devices-online-only"> 仅在线</label>
+                <button type="button" class="btn sm" id="btn-devices-refresh">刷新</button>
+                <button type="button" class="btn sm ghost" id="btn-devices-apply" title="重新写入 iptables 规则">应用规则</button>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div class="device-batch-bar" id="device-batch-bar" hidden>
+          <span class="device-batch-count" id="device-batch-count">已选 0 台</span>
+          <div class="seg-control device-batch-seg" role="group" aria-label="批量设置策略">
+            <button type="button" class="seg-btn" id="btn-batch-policy-proxy">允许</button>
+            <button type="button" class="seg-btn" id="btn-batch-policy-direct">直连</button>
+            <button type="button" class="seg-btn danger" id="btn-batch-policy-block">禁止</button>
+          </div>
+          <button type="button" class="btn sm ghost" id="btn-batch-clear">取消选择</button>
+        </div>
+        <p class="hint devices-policy-note">翻墙规则按 <strong>MAC 地址</strong> 登记；设备 DHCP 换 IP 后策略仍跟随，当前 IP 仅作显示。</p>
+        <div class="panel devices-panel">
+          <div class="table-wrap devices-table-wrap">
+            <table class="devices-table">
+              <thead>
+                <tr>
+                  <th class="col-check"><input type="checkbox" id="devices-select-all" title="全选"></th>
+                  <th>IP</th>
+                  <th>设备</th>
+                  <th>MAC</th>
+                  <th>状态</th>
+                  <th>策略</th>
+                </tr>
+              </thead>
+              <tbody id="devices-body"></tbody>
+            </table>
+          </div>
+          <p class="hint devices-foot" id="devices-summary"></p>
+        </div>
+      </section>
+
+      <section id="tab-settings" class="tab">
+        <header class="page-header">
+          <h1>设置</h1>
+        </header>
+        <div class="panel">
+          <h2>账户</h2>
+          <form id="form-password" class="settings-form compact-form">
+            <label>当前密码<input type="password" name="old_password" autocomplete="current-password" required></label>
+            <label>新密码<input type="password" name="new_password" autocomplete="new-password" required minlength="4"></label>
+            <label>确认新密码<input type="password" name="confirm_password" autocomplete="new-password" required></label>
+            <button type="submit" class="btn primary">修改密码</button>
+            <p class="hint">修改后将重启面板，需重新登录</p>
+          </form>
+        </div>
+        <div class="panel">
+          <h2>外观</h2>
+          <div class="theme-switch compact-switch" id="theme-switch">
+            <button type="button" class="theme-btn" data-theme="dark">暗色</button>
+            <button type="button" class="theme-btn" data-theme="light">亮色</button>
+            <button type="button" class="theme-btn" data-theme="system">跟随系统</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>面板</h2>
+          <form id="form-settings" class="settings-form">
+            <label class="checkbox">
+              <input type="checkbox" name="dashboard_auto_refresh" id="setting-auto-refresh">
+              概览页自动刷新
+            </label>
+            <label>设备列表刷新间隔（秒）
+              <input type="number" name="devices_refresh_sec" id="setting-devices-sec" min="5" max="300" value="15">
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" name="auto_switch_enabled" id="setting-auto-switch">
+              当当前节点不在延迟前六时自动切换最快节点
+            </label>
+            <label>自动切换检查间隔（秒）
+              <input type="number" name="auto_switch_interval_sec" id="setting-auto-switch-sec" min="30" max="3600" value="300">
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" name="traffic_failover_enabled" id="setting-traffic-failover">
+              当前机场流量达到阈值时自动切换其他机场
+            </label>
+            <label>流量切换阈值（%）
+              <input type="number" name="traffic_failover_threshold" id="setting-traffic-threshold" min="80" max="100" value="100">
+            </label>
+            <label>节点测速冷却（秒，避免频繁耗流量）
+              <input type="number" name="node_test_cooldown_sec" id="setting-node-cooldown" min="60" max="3600" value="600">
+            </label>
+            <button type="submit" class="btn primary">保存设置</button>
+          </form>
+        </div>
+        <div class="panel">
+          <h2>关于</h2>
+          <p class="hint">N1 Mihomo Web 面板 · 旁路由透明代理管理</p>
+          <p class="hint" id="settings-about-version"></p>
+          <p class="hint" id="settings-about-ip"></p>
+          <p class="hint" id="settings-about-port"></p>
+        </div>
+      </section>
+
+      <section id="tab-service" class="tab">
+        <header class="page-header">
+          <h1>服务与调试</h1>
+        </header>
+        <div class="cards" id="service-cards"></div>
+
+        <div class="panel">
+          <h2>透明代理 TUN</h2>
+          <p class="hint">开启后 N1 本机及局域网设备可透明翻墙（需 mihomo 具备 CAP_NET_ADMIN）</p>
+          <div class="inline-form">
+            <label class="checkbox tun-toggle">
+              <input type="checkbox" id="tun-enable"> 启用 TUN 模式
+            </label>
+            <button class="btn primary" id="btn-tun-save">保存并重启</button>
+          </div>
+          <pre id="tun-status" class="mono"></pre>
+        </div>
+
+        <div class="panel">
+          <h2>运行参数</h2>
+          <div class="inline-form">
+            <label>日志
+              <select id="runtime-log">
+                <option value="info">info</option>
+                <option value="warning">warning</option>
+                <option value="error">error</option>
+                <option value="debug">debug</option>
+              </select>
+            </label>
+            <button class="btn" id="btn-runtime-save">应用</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>操作</h2>
+          <div class="actions">
+            <button class="btn" id="btn-validate">校验配置</button>
+            <button class="btn" id="btn-apply">应用配置</button>
+            <button class="btn warn" id="btn-restart">重启 mihomo</button>
+          </div>
+          <div id="service-output" class="log-viewer mono-box"></div>
+        </div>
+        <div class="panel panel-logs">
+          <div class="panel-head">
+            <h2>运行日志</h2>
+            <div class="panel-head-actions">
+              <span class="hint" id="logs-meta"></span>
+              <button class="btn sm" id="btn-refresh-logs" type="button">刷新</button>
+            </div>
+          </div>
+          <div id="logs-box" class="log-viewer logs-viewer"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="toast"></div>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

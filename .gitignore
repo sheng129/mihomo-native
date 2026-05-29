@@ -1,0 +1,29 @@
+# 敏感配置（含订阅 token）
+config.yaml
+panel/providers/
+providers/
+
+# 大体积 geodata（可用 download-geodata.sh 下载）
+geoip.metadb
+geosite.dat
+*.mmdb
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 面板运行时数据
+/var/
+*.log
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# 环境
+.env
+/etc/n1-panel/env
