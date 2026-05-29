@@ -1,5 +1,5 @@
 [Unit]
-Description=N1 Mihomo Web Panel
+Description=Mihomo Web Panel
 After=network-online.target mihomo.service
 Wants=network-online.target
 
@@ -8,7 +8,7 @@ Type=simple
 User=root
 WorkingDirectory=/opt/n1-panel
 EnvironmentFile=-/etc/n1-panel/env
-ExecStart=/usr/bin/python3 /opt/n1-panel/app.py
+ExecStart=/usr/bin/python3 /opt/panel/app.py
 Restart=on-failure
 RestartSec=3
 
