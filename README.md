@@ -1,4 +1,4 @@
-# N1 Mihomo 旁路由
+# Linux Mihomo 旁路由
 
 在 Phicomm N1（或其它 OpenWrt/Armbian 设备）上运行 [Mihomo](https://github.com/MetaCubeX/mihomo) 作为局域网透明代理旁路由，并提供 Web 管理面板。
 
@@ -12,7 +12,7 @@
 ## 目录结构
 
 ```
-├── config.example.yaml   # 配置模板（复制为 config.yaml 并填入订阅）
+├── config.example.yaml   # 配置模板
 ├── panel/                # Flask Web 面板
 ├── install-on-n1.sh      # 安装 Mihomo 核心
 ├── install-panel.sh      # 部署面板到 N1
@@ -24,7 +24,7 @@
 
 1. 复制配置：`cp config.example.yaml config.yaml`，编辑订阅 URL。
 2. 将项目同步到 N1 后执行 `install-on-n1.sh`、`setup-gateway.sh`、`install-panel.sh`。
-3. 浏览器访问 `http://<N1_IP>:8088`（默认密码见安装脚本说明）。
+3. 浏览器访问 `http://<N1_IP>:8088`（默认密码：见安装脚本说明）。
 
 ## 面板：添加机场
 
