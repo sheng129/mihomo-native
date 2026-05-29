@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import os
+
 from flask import Blueprint, jsonify, request
 
 from auth import login_required, panel_password
 from deps import mihomo
 from panel_helpers import local_ip
 from panel_settings import change_password, get_settings, restart_panel, save_settings
+from system_info import get_system_info
 
 bp = Blueprint("settings_api", __name__)
 
@@ -16,11 +19,16 @@ def api_settings():
     if request.method == "GET":
         data = get_settings()
         data["local_ip"] = local_ip()
+        data["panel_port"] = int(os.environ.get("PANEL_PORT", "8088"))
         try:
             version = mihomo.get("/version", timeout=3)
             data["mihomo_version"] = version.get("version") if isinstance(version, dict) else str(version)
         except Exception:
             data["mihomo_version"] = ""
+        try:
+            data["system"] = get_system_info()
+        except Exception:
+            data["system"] = {}
         return jsonify(data)
     body = request.json or {}
     try:

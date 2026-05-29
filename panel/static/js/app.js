@@ -781,6 +781,31 @@ async function loadSettings() {
   if (ver) ver.textContent = `Mihomo 版本：${data.mihomo_version || "-"}`;
   const ip = $("#settings-about-ip");
   if (ip) ip.textContent = `本机 IP：${data.local_ip || "-"}`;
+  renderSystemInfo(data.system);
+}
+
+function renderSystemInfo(sys) {
+  const el = $("#settings-system-info");
+  if (!el) return;
+  if (!sys || !Object.keys(sys).length) {
+    el.innerHTML = "<p class='hint'>无法读取系统信息</p>";
+    return;
+  }
+  const rows = [
+    ["操作系统", sys.os_pretty || sys.os_name],
+    ["发行版", sys.is_armbian ? "Armbian" : (sys.os_id || sys.os_name)],
+    ["架构", sys.architecture_label || sys.architecture],
+    ["内核", sys.kernel ? `Linux ${sys.kernel}` : ""],
+    ["主机名", sys.hostname],
+    ["设备型号", sys.board],
+    ["CPU", sys.cpu_model],
+    ["内存", sys.memory],
+    ["根分区", sys.disk_root],
+    ["运行时间", sys.uptime_human],
+  ].filter(([, v]) => v);
+  el.innerHTML = rows.map(([k, v]) =>
+    `<div class="system-info-row"><span class="system-info-k">${escapeHtml(k)}</span><span class="system-info-v">${escapeHtml(String(v))}</span></div>`
+  ).join("");
 }
 
 async function loadService() {
@@ -875,13 +900,38 @@ $("#btn-delay-test").onclick = async () => {
 
 let providerFormMeta = { types: [], presets: [] };
 
+const PROVIDER_SOURCE_TITLES = {
+  http: "订阅链接",
+  file: "本地文件路径",
+  inline: "节点内容 (YAML)",
+};
+
+function getProviderType() {
+  return $("#provider-type-input")?.value || "http";
+}
+
+function setProviderType(t) {
+  const input = $("#provider-type-input");
+  if (input) input.value = t;
+  $$("#provider-type-seg .seg-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.providerType === t);
+  });
+  syncProviderFormFields();
+}
+
 function syncProviderFormFields() {
-  const t = $("#provider-type-select")?.value || "http";
+  const t = getProviderType();
   $$(".provider-field-url").forEach(el => el.classList.toggle("hidden", t !== "http"));
   $$(".provider-field-path").forEach(el => el.classList.toggle("hidden", t !== "file"));
   $$(".provider-field-payload").forEach(el => el.classList.toggle("hidden", t !== "inline"));
   $$(".provider-field-interval").forEach(el => el.classList.toggle("hidden", t !== "http"));
-  $$(".provider-field-ua, .provider-field-headers").forEach(el => el.classList.toggle("hidden", t !== "http"));
+  const nameField = $(".field-name");
+  if (nameField) nameField.style.gridColumn = t === "http" ? "" : "1 / -1";
+  $$(".provider-field-ua, .provider-field-headers").forEach(el => {
+    el.closest(".provider-advanced")?.classList.toggle("provider-advanced-http-only", t !== "http");
+  });
+  const title = $("#provider-source-title");
+  if (title) title.textContent = PROVIDER_SOURCE_TITLES[t] || "订阅";
   const urlInput = $("#form-add-provider")?.querySelector("[name=url]");
   if (urlInput) urlInput.required = t === "http";
 }
@@ -890,15 +940,18 @@ function renderProviderPresets() {
   const box = $("#provider-presets");
   if (!box) return;
   box.innerHTML = (providerFormMeta.presets || []).map(p =>
-    `<button type="button" class="btn sm provider-preset-btn" data-preset="${escapeHtml(p.id)}">${escapeHtml(p.label)}</button>`
+    `<button type="button" class="provider-preset-card" data-preset="${escapeHtml(p.id)}">
+      <span class="preset-title">${escapeHtml(p.label)}</span>
+      <span class="preset-desc">${escapeHtml((p.hint || "").slice(0, 36))}${(p.hint || "").length > 36 ? "…" : ""}</span>
+    </button>`
   ).join("");
-  $$(".provider-preset-btn", box).forEach(btn => {
+  $$(".provider-preset-card", box).forEach(btn => {
     btn.onclick = () => {
+      $$(".provider-preset-card", box).forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
       const preset = (providerFormMeta.presets || []).find(p => p.id === btn.dataset.preset);
       if (!preset) return;
-      const sel = $("#provider-type-select");
-      if (sel) sel.value = preset.provider_type || "http";
-      syncProviderFormFields();
+      setProviderType(preset.provider_type || "http");
       const form = $("#form-add-provider");
       const hint = $("#provider-form-hint");
       if (hint && preset.hint) hint.textContent = preset.hint;
@@ -910,9 +963,29 @@ function renderProviderPresets() {
       const hdr = form.querySelector("[name=headers]");
       if (hdr && preset.default_headers) {
         hdr.value = Object.entries(preset.default_headers).map(([k, v]) => `${k}: ${v}`).join("\n");
+        form.querySelector(".provider-advanced")?.setAttribute("open", "");
       }
     };
   });
+}
+
+function openAddProviderDialog() {
+  const dlg = $("#add-provider-dialog");
+  if (!dlg) return;
+  loadProviderFormMeta();
+  setProviderType("http");
+  const hint = $("#provider-form-hint");
+  if (hint) hint.textContent = "选择订阅类型并填写必要信息";
+  $$(".provider-preset-card").forEach(b => b.classList.remove("active"));
+  if (dlg.showModal) dlg.showModal();
+  else dlg.classList.remove("hidden");
+}
+
+function closeAddProviderDialog() {
+  const dlg = $("#add-provider-dialog");
+  if (!dlg) return;
+  if (dlg.close) dlg.close();
+  else dlg.classList.add("hidden");
 }
 
 async function loadProviderFormMeta() {
@@ -924,13 +997,18 @@ async function loadProviderFormMeta() {
   }
 }
 
-$("#btn-show-add-provider").onclick = () => {
-  $("#add-provider-form").classList.remove("hidden");
-  loadProviderFormMeta();
-  syncProviderFormFields();
-};
-$("#btn-cancel-add").onclick = () => $("#add-provider-form").classList.add("hidden");
-$("#provider-type-select")?.addEventListener("change", syncProviderFormFields);
+$("#btn-show-add-provider").onclick = () => openAddProviderDialog();
+$("#btn-cancel-add")?.addEventListener("click", closeAddProviderDialog);
+$("#btn-cancel-add-2")?.addEventListener("click", closeAddProviderDialog);
+$$("#provider-type-seg .seg-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (btn.dataset.providerType) setProviderType(btn.dataset.providerType);
+  });
+});
+$("#add-provider-dialog")?.addEventListener("cancel", e => {
+  e.preventDefault();
+  closeAddProviderDialog();
+});
 
 $("#form-add-provider").onsubmit = async e => {
   e.preventDefault();
@@ -957,7 +1035,8 @@ $("#form-add-provider").onsubmit = async e => {
     });
     toast("机场已添加");
     e.target.reset();
-    $("#add-provider-form").classList.add("hidden");
+    setProviderType("http");
+    closeAddProviderDialog();
     loadProviders();
     loadProxies();
   } catch (err) { toast(err.message, true); }

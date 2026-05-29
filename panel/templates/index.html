@@ -122,47 +122,91 @@
             <button type="button" class="btn sm" id="btn-provider-qr-close">关闭</button>
           </div>
         </dialog>
-        <div class="panel hidden" id="add-provider-form">
-          <h2>添加机场</h2>
-          <p class="hint" id="provider-form-hint">支持 Clash/Meta 远程订阅、本地 YAML、内联节点与 Token 请求头。</p>
-          <div class="provider-presets" id="provider-presets"></div>
-          <form id="form-add-provider" class="provider-form">
-            <label>名称 <input name="name" required placeholder="例如 myairport"></label>
-            <label>订阅方式
-              <select name="provider_type" id="provider-type-select">
-                <option value="http">远程订阅 (HTTP)</option>
-                <option value="file">本地文件</option>
-                <option value="inline">内联节点</option>
-              </select>
-            </label>
-            <label class="provider-field provider-field-url">订阅 URL
-              <input name="url" type="url" placeholder="https://example.com/sub?token=...">
-            </label>
-            <label class="provider-field provider-field-path hidden">本地路径
-              <input name="path" placeholder="./providers/myairport.yaml">
-            </label>
-            <label class="provider-field provider-field-payload hidden">节点内容 (YAML)
-              <textarea name="payload" rows="6" placeholder="- name: node1&#10;  type: ss&#10;  server: ..."></textarea>
-            </label>
-            <label class="provider-field provider-field-interval">更新间隔(秒)
-              <input name="interval" type="number" value="3600" min="300">
-            </label>
-            <label class="provider-field provider-field-ua">User-Agent（可选）
-              <input name="user_agent" placeholder="部分机场要求自定义 UA">
-            </label>
-            <label class="provider-field provider-field-headers">请求头（可选，每行 Key: Value）
-              <textarea name="headers" rows="2" placeholder="Authorization: Bearer xxx"></textarea>
-            </label>
-            <label>流量限额(GB，可选) <input name="limit_gb" type="number" step="0.1" placeholder="例如 100"></label>
-            <label>节点过滤(正则，可选) <input name="filter" placeholder="(新加坡|香港|日本)"></label>
-            <label>排除过滤(正则，可选) <input name="exclude_filter" placeholder="过期|倍率"></label>
-            <label class="checkbox"><input name="add_to_auto" type="checkbox" checked> 加入 AUTO 策略组</label>
-            <div class="actions">
-              <button type="submit" class="btn primary">保存并应用</button>
-              <button type="button" class="btn" id="btn-cancel-add">取消</button>
+        <dialog id="add-provider-dialog" class="provider-add-dialog">
+          <div class="provider-add-sheet">
+            <header class="provider-add-header">
+              <div>
+                <h2>添加机场</h2>
+                <p class="hint" id="provider-form-hint">选择订阅类型并填写必要信息</p>
+              </div>
+              <button type="button" class="btn sm ghost provider-add-close" id="btn-cancel-add" aria-label="关闭">×</button>
+            </header>
+            <div class="provider-add-body">
+              <section class="provider-add-block">
+                <h3 class="provider-add-label">快捷选择</h3>
+                <div class="provider-preset-grid" id="provider-presets"></div>
+              </section>
+              <form id="form-add-provider" class="provider-form">
+                <section class="provider-add-block">
+                  <h3 class="provider-add-label">基本信息</h3>
+                  <div class="form-row-2">
+                    <label class="field field-name">
+                      <span class="field-title">名称</span>
+                      <input name="name" required placeholder="例如 myairport" autocomplete="off">
+                    </label>
+                    <label class="field provider-field-interval">
+                      <span class="field-title">更新间隔 (秒)</span>
+                      <input name="interval" type="number" value="3600" min="300">
+                    </label>
+                  </div>
+                  <div class="field">
+                    <span class="field-title">订阅方式</span>
+                    <input type="hidden" name="provider_type" id="provider-type-input" value="http">
+                    <div class="seg-control provider-type-seg" id="provider-type-seg" role="group" aria-label="订阅方式">
+                      <button type="button" class="seg-btn active" data-provider-type="http">远程</button>
+                      <button type="button" class="seg-btn" data-provider-type="file">本地</button>
+                      <button type="button" class="seg-btn" data-provider-type="inline">内联</button>
+                    </div>
+                  </div>
+                </section>
+                <section class="provider-add-block provider-source-block">
+                  <h3 class="provider-add-label" id="provider-source-title">订阅链接</h3>
+                  <label class="field provider-field provider-field-url">
+                    <input name="url" type="url" placeholder="https://example.com/sub?token=...">
+                  </label>
+                  <label class="field provider-field provider-field-path hidden">
+                    <input name="path" placeholder="./providers/myairport.yaml">
+                  </label>
+                  <label class="field provider-field provider-field-payload hidden">
+                    <textarea name="payload" rows="5" placeholder="- name: node1&#10;  type: ss&#10;  server: ...&#10;  port: 443"></textarea>
+                  </label>
+                </section>
+                <details class="provider-advanced">
+                  <summary>高级选项</summary>
+                  <div class="provider-advanced-inner">
+                    <label class="field provider-field provider-field-ua">
+                      <span class="field-title">User-Agent</span>
+                      <input name="user_agent" placeholder="部分机场要求自定义 UA">
+                    </label>
+                    <label class="field provider-field provider-field-headers">
+                      <span class="field-title">请求头（每行 Key: Value）</span>
+                      <textarea name="headers" rows="2" placeholder="Authorization: Bearer xxx"></textarea>
+                    </label>
+                    <label class="field">
+                      <span class="field-title">流量限额 (GB)</span>
+                      <input name="limit_gb" type="number" step="0.1" placeholder="可选，添加后可在卡片上设告警%">
+                    </label>
+                    <label class="field">
+                      <span class="field-title">节点过滤（正则）</span>
+                      <input name="filter" placeholder="(新加坡|香港|日本)">
+                    </label>
+                    <label class="field">
+                      <span class="field-title">排除过滤（正则）</span>
+                      <input name="exclude_filter" placeholder="过期|倍率">
+                    </label>
+                  </div>
+                </details>
+                <footer class="provider-add-footer">
+                  <label class="checkbox compact"><input name="add_to_auto" type="checkbox" checked> 加入 AUTO 策略组</label>
+                  <div class="provider-add-actions">
+                    <button type="button" class="btn sm ghost" id="btn-cancel-add-2">取消</button>
+                    <button type="submit" class="btn sm primary">保存并应用</button>
+                  </div>
+                </footer>
+              </form>
             </div>
-          </form>
-        </div>
+          </div>
+        </dialog>
       </section>
 
       <section id="tab-rules" class="tab">
@@ -292,6 +336,12 @@
             </label>
             <button type="submit" class="btn primary">保存设置</button>
           </form>
+        </div>
+        <div class="panel">
+          <h2>系统信息</h2>
+          <div class="system-info-grid" id="settings-system-info">
+            <p class="hint">加载中…</p>
+          </div>
         </div>
         <div class="panel">
           <h2>关于</h2>

@@ -36,6 +36,8 @@ scp_put \
   "${PANEL_DIR}/traffic_store.py" \
   "${PANEL_DIR}/panel_settings.py" \
   "${PANEL_DIR}/device_manager.py" \
+  "${PANEL_DIR}/subscription.py" \
+  "${PANEL_DIR}/system_info.py" \
   "${PANEL_DIR}/requirements.txt" \
   "${PANEL_DIR}/routes" \
   "${N1_USER}@${N1_IP}:${REMOTE_DIR}/"
